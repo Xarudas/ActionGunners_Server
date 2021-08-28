@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.meatinc.actiongunnersshared": {
+      "version": "file:F:/Job/repos/ActionGunners/ActionGunners_Client/Assets/ActionGunnersShared",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.7.1",
       "depth": 0,
