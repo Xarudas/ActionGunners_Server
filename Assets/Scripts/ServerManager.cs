@@ -50,6 +50,12 @@ namespace MeatInc.ActionGunnersServer
 
         private void OnClientDiconnected(object sender, ClientDisconnectedEventArgs e)
         {
+            IClient client = e.Client;
+            ClientConnection p;
+            if (Players.TryGetValue(client.ID, out p))
+            {
+                p.OnClientDiconnect(sender, e);
+            }
             e.Client.MessageReceived -= OnMessage;
         }
 
