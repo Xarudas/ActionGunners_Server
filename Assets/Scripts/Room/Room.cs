@@ -69,10 +69,6 @@ namespace MeatInc.ActionGunnersServer.RoomSystem
         public void LeftRoom(RoomConnection connection)
         {
             RemovePlayerFromRoom(connection);
-            using (Message message = Message.CreateEmpty(Tags.Room.LeaveResponse))
-            {
-                connection.Client.SendMessage(message, SendMode.Reliable);
-            }
         }
         private void DisableMeshsInRoom()
         {

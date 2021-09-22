@@ -72,7 +72,7 @@ namespace MeatInc.ActionGunnersServer.RoomSystem
                         OnRefreshRooms(client);
                         break;
                     case Tags.Room.CreateRequest:
-                        CreateRoom(message.Deserialize<CreateRoomRequest>());
+                        CreateRoom(client, message.Deserialize<CreateRoomRequest>());
                         break;
                     case Tags.Room.JoinRequest:
                         TryJoinRoom(client, message.Deserialize<JoinRoomRequest>());
@@ -112,6 +112,15 @@ namespace MeatInc.ActionGunnersServer.RoomSystem
                     client.SendMessage(message, SendMode.Reliable);
                 }
             }
+        }
+        private RoomData CreateRoom(IClient client, CreateRoomRequest data)
+        {
+            var room = CreateRoom(data);
+            using (Message message = Message.Create(Tags.Room.CreateAccept, room))
+            {
+                client.SendMessage(message, SendMode.Reliable);
+            }
+            return room;
         }
         private RoomData CreateRoom(CreateRoomRequest data)
         {
