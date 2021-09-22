@@ -1,19 +1,21 @@
-using DarkRift;
 using DarkRift.Server;
 using DarkRift.Server.Unity;
-using MeatInc.ActionGunnersShared;
+using MeatInc.ActionGunnersServer.Connections;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace MeatInc.ActionGunnersServer
 {
+    [RequireComponent(typeof(XmlUnityServer))]
     public class ServerManager : MonoBehaviour
     {
-        public static ServerManager Instance;
-        public Dictionary<ushort, ClientConnection> Players = new Dictionary<ushort, ClientConnection>();
-        public Dictionary<string, ClientConnection> PlayersByName = new Dictionary<string, ClientConnection>();
+        public event Action<ClientConnection> Connected;
+        public event Action<ClientConnection> Disconnected;
+        public List<ClientConnection> Clients { get; } = new List<ClientConnection>();
+        public static ServerManager Instance { get; private set; }
 
         private XmlUnityServer _xmlServer;
         private DarkRiftServer _server;
@@ -45,51 +47,22 @@ namespace MeatInc.ActionGunnersServer
 
         private void OnClientConnected(object sender, ClientConnectedEventArgs e)
         {
-            e.Client.MessageReceived += OnMessage;
+            var clientConnection = new ClientConnection(e.Client);
+            Clients.Add(clientConnection);
+            Connected?.Invoke(clientConnection);
         }
-
         private void OnClientDiconnected(object sender, ClientDisconnectedEventArgs e)
         {
-            IClient client = e.Client;
-            ClientConnection p;
-            if (Players.TryGetValue(client.ID, out p))
+            var clientConnection = Clients.FirstOrDefault(c => c.Client == e.Client);
+            if (clientConnection != null)
             {
-                p.OnClientDiconnect(sender, e);
+                Disconnected?.Invoke(clientConnection);
+                Clients.Remove(clientConnection);
             }
-            e.Client.MessageReceived -= OnMessage;
+            
         }
 
-        private void OnMessage(object sender, MessageReceivedEventArgs e)
-        {
-            IClient client = (IClient)sender;
-            using (Message message = e.GetMessage())
-            {
-                switch (e.Tag)
-                {
-                    case Tags.Login.LoginRequest:
-                        OnClientLogin(client, message.Deserialize<LoginRequestData>());
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
+        
 
-        private void OnClientLogin(IClient client, LoginRequestData loginRequestData)
-        {
-            if (PlayersByName.ContainsKey(loginRequestData.Login))
-            {
-                using (Message message = Message.CreateEmpty(Tags.Login.LoginRequestDenied))
-                {
-                    client.SendMessage(message, SendMode.Reliable);
-                }
-                return;
-            }
-
-            client.MessageReceived -= OnMessage;
-
-            new ClientConnection(client, loginRequestData);
-        }
     }
-
 }
