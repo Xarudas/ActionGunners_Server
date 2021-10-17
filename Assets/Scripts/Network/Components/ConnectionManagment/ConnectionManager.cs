@@ -1,4 +1,5 @@
 using DarkRift.Server;
+using MeatInc.ActionGunnersServer.Interfaces.Network.Components.ServerManagment;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,29 +11,34 @@ namespace MeatInc.ActionGunnersServer.Network.Components.ConnectionManagment
 {
     public class ConnectionManager : IInitializable, IDisposable
     {
+        public event Action<ClientConnection> ClientConnected;
+        public event Action<ClientConnection> ClientDisconnected;
         private List<ClientConnection> Connections { get; } = new List<ClientConnection>();
-        private readonly DarkRiftServer _server;
-        public ConnectionManager(DarkRiftServer server)
+        private readonly IServerInfo _serverInfo;
+        public ConnectionManager(IServerInfo serverInfo)
         {
-            _server = server;
+            _serverInfo = serverInfo;
         }
         public void Initialize()
         {
-            _server.ClientManager.ClientConnected += OnClientConnect;
-            _server.ClientManager.ClientDisconnected += OnClientDisconnect;
+            _serverInfo.Server.ClientManager.ClientConnected += OnClientConnect;
+            _serverInfo.Server.ClientManager.ClientDisconnected += OnClientDisconnect;
         }
         public void Dispose()
         {
-            _server.ClientManager.ClientConnected -= OnClientConnect;
-            _server.ClientManager.ClientDisconnected -= OnClientDisconnect;
+            _serverInfo.Server.ClientManager.ClientConnected -= OnClientConnect;
+            _serverInfo.Server.ClientManager.ClientDisconnected -= OnClientDisconnect;
         }
         private void OnClientConnect(object sender, ClientConnectedEventArgs e)
         {
-            Connections.Add(new ClientConnection(e.Client));
+            var connection = new ClientConnection(e.Client);
+            Connections.Add(connection);
+            ClientConnected?.Invoke(connection);
         }
         private void OnClientDisconnect(object sender, ClientDisconnectedEventArgs e)
         {
             var clientConnection = Connections.FirstOrDefault(c => c.Client == e.Client);
+            ClientDisconnected?.Invoke(clientConnection);
             if (clientConnection != null)
             {
                 Connections.Remove(clientConnection);
