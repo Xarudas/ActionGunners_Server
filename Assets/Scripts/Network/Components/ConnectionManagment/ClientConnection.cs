@@ -10,21 +10,21 @@ namespace MeatInc.ActionGunnersServer.Network.Components.ConnectionManagment
     public class ClientConnection : IInitializable, IDisposable
     {
         public IClient Client { get; }
-        public NetworkRelay _networkRelay { get; }
+        public NetworkRelay NetworkRelay { get; }
 
         public ClientConnection(IClient client)
         {
             Client = client;
-            _networkRelay = new NetworkRelay(client);
+            NetworkRelay = new NetworkRelay(client);
         }
         public void Initialize()
         {
-            _networkRelay.Initialize();
+            NetworkRelay.Initialize();
         }
 
         public void Dispose()
         {
-            _networkRelay.Dispose();
+            NetworkRelay.Dispose();
         }
     }
 }
